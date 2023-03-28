@@ -1,7 +1,7 @@
 // What will the checker do?
 // -> Ask Scrapers if they're running jobs or done
 import axios, { AxiosError } from "axios";
-import { CheckResponse, ErrorResponse } from "../types/checker.types";
+import { CheckResponse } from "../types/checker.types";
 
 export default class Checker {
   scrapers: String[] | undefined;
@@ -11,7 +11,7 @@ export default class Checker {
     this.scrapers = scrapers;
   }
 
-  async getScraperStatus(): Promise<CheckResponse | ErrorResponse> {
+  async getScraperStatus(): Promise<CheckResponse[]> {
     console.log("Checking if the scrapers are done...");
     let results: CheckResponse[] = [];
 
@@ -25,26 +25,25 @@ export default class Checker {
         results.push(res.data);
       }
     } catch (err) {
-      
-      let errorResponse: ErrorResponse;
+      let errorResponse;
 
       if (err instanceof AxiosError) {
         errorResponse = {
           error: true,
+          isDone: false,
           code: err.code,
           message: err.message,
         };
-      }
-
-      if (err instanceof Error) {
+      } else {
         errorResponse = {
           error: true,
-          message: err.message,
+          isDone: false,
+          message: err instanceof Error ? err.message : "No message given",
           code: undefined,
+          data: err,
         };
       }
-
-      return errorResponse;
+      return [errorResponse];
     }
 
     return results;
